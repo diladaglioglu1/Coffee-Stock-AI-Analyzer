@@ -1,63 +1,57 @@
-from fastapi import FastAPI
-from sqlmodel import select
+from fastapi import FastAPI, Depends, HTTPException
+from sqlmodel import Session, select
+from typing import List
+import uvicorn
 
-from database import get_session
+from database import get_session, create_db_and_tables
 from models import Product, Sale
 
-app = FastAPI()
+app = FastAPI(title="Coffee Stock AI Analyzer")
 
+@app.on_event("startup")
+def on_startup():
+   create_db_and_tables()
 
 @app.get("/")
 def root():
-    return {"message": "Coffee Inventory API running"}
+    return {"status": "Coffee AI Backend is Ready"}
 
-
-@app.get("/api/products")
-def get_products():
-    with get_session() as session:
-        products = session.exec(select(Product)).all()
-
-        return [
-            {
-                "id": p.id,
-                "name": p.name,
-                "current_stock": p.current_stock,
-                "unit": p.unit
-            }
-            for p in products
-        ]
-
+@app.get("/api/products", response_model=List[Product])
+def get_products(session: Session = Depends(get_session)):
+    products = session.exec(select(Product)).all()
+    return products
 
 @app.get("/api/analyze/{product_id}")
-def analyze_product(product_id: int):
+def analyze_product(product_id: int, session: Session = Depends(get_session)):
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
 
-    with get_session() as session:
+    sales = session.exec(
+        select(Sale).where(Sale.product_id == product_id)
+    ).all()
 
-        product = session.get(Product, product_id)
-
-        if not product:
-            return {"error": "Product not found"}
-
-        sales = session.exec(
-            select(Sale).where(Sale.product_id == product_id)
-        ).all()
-
-        if not sales:
-            return {"message": "No sales data"}
-
-        last_7_days_sales = sales[-7:]
-
-        avg_sales = sum(s.quantity for s in last_7_days_sales) / len(last_7_days_sales)
-
-        recommendation = "Stock level OK"
-
-        if product.current_stock < avg_sales * 3:
-            recommendation = "Stock may run out soon. Consider ordering more."
-
+    if not sales:
         return {
             "product": product.name,
             "current_stock": product.current_stock,
-            "average_daily_sales": round(avg_sales, 2),
-            "recommendation": recommendation
+            "message": "No sales data found for this product."
         }
-        
+
+
+    last_sales = sales[-7:] if len(sales) >= 7 else sales
+    avg_sales = sum(s.quantity for s in last_sales) / len(last_sales)
+
+    recommendation = "Stok Durumu İyi"
+    if product.current_stock < avg_sales * 3:
+        recommendation = "Stok azalıyor, sipariş vermeyi düşünün!"
+
+    return {
+        "product_name": product.name,
+        "current_stock": product.current_stock,
+        "average_daily_sales": round(avg_sales, 2),
+        "recommendation": recommendation
+    }
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
