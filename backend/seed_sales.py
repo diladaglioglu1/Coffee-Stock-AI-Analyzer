@@ -1,3 +1,14 @@
+"""
+seed_sales.py
+
+This script generates simulated historical sales data for the coffee shop
+inventory system. It creates approximately 30 days of sales records for
+each product stored in the database.
+
+The goal of this dataset is to simulate realistic demand patterns that
+can later be analyzed by the backend and the Gemini AI module to generate
+inventory recommendations.
+"""
 import random
 from datetime import date, timedelta
 
