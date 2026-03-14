@@ -1,10 +1,26 @@
-**.idea/**
-.env
-*.db
-node_modules/
-__pycache__/
-.venv/
+# IDE ve Editör Dosyaları
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# Python (Backend) Dosyaları
+.venv/
+env/
+venv/
 __pycache__/
 *.py[cod]
+*$py.class
+*.db
+.env
+
+# Node.js (Frontend) Dosyaları
+node_modules/
+dist/
+build/
+.eslintcache
+.stylelintcache
+
+# Sistem Dosyaları
+.DS_Store
+Thumbs.db

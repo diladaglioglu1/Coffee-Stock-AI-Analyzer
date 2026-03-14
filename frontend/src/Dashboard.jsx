@@ -8,15 +8,18 @@ import SummaryCard from "./components/SummaryCard";
 import EmptyAnalysisState from "./components/EmptyAnalysisState";
 import AnalysisModal from "./components/AnalysisModal";
 
-import { demoProducts, demoAnalyses } from "./data/demoData";
+import { demoProducts } from "./data/demoData";
 
 const Dashboard = () => {
+  // Ekranda gezinme ve veri yönetimi için gerekli tüm state'ler
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [productSearch, setProductSearch] = useState("");
 
+  // Ürün seçimlerini ve filtrelemeleri hesapla
   const featuredProducts = useMemo(() => demoProducts.slice(0, 4), []);
   const selectedProduct =
     demoProducts.find((item) => item.id === selectedProductId) || null;
@@ -25,18 +28,38 @@ const Dashboard = () => {
     item.name.toLowerCase().includes(productSearch.toLowerCase())
   );
 
-  const selectedAnalysis =
-    selectedProductId ? demoAnalyses[selectedProductId] : null;
-
-  const handleAnalyze = () => {
+  // BACKEND BAĞLANTI FONKSİYONU
+  const handleAnalyze = async () => {
     if (!selectedProduct) return;
 
     setIsAnalyzing(true);
 
-    setTimeout(() => {
-      setIsAnalyzing(false);
+    try {
+      // Python Backend (FastAPI) isteği
+      const response = await fetch(`http://localhost:8000/api/ai/analyze/${selectedProduct.id}`);
+
+      if (!response.ok) {
+        throw new Error("Backend'den cevap alınamadı.");
+      }
+
+      const data = await response.json();
+
+      // Backend'den gelen veriyi Modal'ın beklediği formata dönüştür
+      const formattedData = {
+        product_name: data.product_name,
+        current_stock: data.current_stock || selectedProduct.current_stock,
+        average_daily_sales: data.average_daily_sales || selectedProduct.average_daily_sales || 0,
+        recommendation: data.recommendation || data.advice // Backend'den gelen tavsiye
+      };
+
+      setSelectedAnalysis(formattedData);
       setIsModalOpen(true);
-    }, 1200);
+    } catch (error) {
+      console.error("AI bağlantı hatası:", error);
+      alert("Backend'e bağlanılamadı. Lütfen terminalde 'uvicorn main:app --reload' komutunun çalıştığından emin ol!");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -82,9 +105,7 @@ const Dashboard = () => {
               />
             </div>
 
-            {/* Değişiklik Buradan Başlıyor: Grid yapısı ve AI Advisory Kutusu */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              {/* Sol Taraf: Stock Attention - Biraz daha genişletildi */}
               <div className="lg:col-span-8 bg-white border border-[#E5DCD4] rounded-[3rem] p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6 text-red-600">
                   <TriangleAlert size={22} />
@@ -121,7 +142,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Sağ Taraf: AI Advisory - Daha dar (col-span-4) ve daha küçük (padding azaltıldı) */}
               <div className="lg:col-span-4 bg-[#1F1311] rounded-[2.5rem] p-6 text-white relative overflow-hidden flex flex-col justify-center min-h-[350px]">
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#D98E5E]/10 blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-[#ffffff]/5 blur-3xl"></div>
@@ -160,13 +180,11 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            {/* Değişiklik Buraya Kadar */}
           </div>
         )}
 
         {activeTab === "analysis" && (
           <div className="animate-in slide-in-from-right-8 duration-700 grid grid-cols-12 gap-10 items-start">
-            {/* LEFT SIDE: PRODUCT LIST */}
             <div className="col-span-12 xl:col-span-5 bg-white/85 border border-white backdrop-blur-xl rounded-[3rem] p-8 shadow-xl flex flex-col h-[490px]">
               <div className="flex items-center justify-between mb-6 border-b border-[#F2EDE8] pb-5">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#1F1311]">
@@ -189,7 +207,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* RIGHT SIDE: ANALYSIS PANEL */}
             <div className="col-span-12 xl:col-span-7 bg-[#1F1311] rounded-[3rem] p-8 shadow-2xl relative overflow-hidden h-[490px]">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#D98E5E] opacity-10 blur-[100px]"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 blur-[120px]"></div>
@@ -198,8 +215,7 @@ const Dashboard = () => {
                 <EmptyAnalysisState onAnalyzeClick={handleAnalyze} />
               ) : (
                 <div className="relative z-10 h-full flex flex-col">
-                  
-                  {/* SEARCH BAR - Moved above product name */}
+
                   <div className="relative mb-6">
                     <Search
                       size={16}
@@ -237,7 +253,6 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  {/* SELECTED PRODUCT INFO */}
                   <div className="flex items-start justify-between gap-6 mb-6">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#847B78] mb-2">
@@ -253,7 +268,6 @@ const Dashboard = () => {
                     </span>
                   </div>
 
-                  {/* QUICK STATS */}
                   <div className="grid grid-cols-3 gap-3 mb-6">
                     <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
                       <p className="text-[10px] uppercase tracking-[0.2em] text-[#847B78] mb-1">
@@ -284,18 +298,16 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* PREVIEW AREA */}
                   <div className="rounded-3xl bg-white/5 border border-white/10 p-5 mb-6">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">
                       System Status
                     </p>
                     <p className="text-[#AFA19E] leading-relaxed text-sm">
-                      AI analysis is ready for <span className="text-white font-bold">{selectedProduct.name}</span>. 
+                      AI analysis is ready for <span className="text-white font-bold">{selectedProduct.name}</span>.
                       Proceed to generate stock forecasts and optimization advice.
                     </p>
                   </div>
 
-                  {/* ACTION BUTTON - Fixed to bottom with mt-auto */}
                   <div className="mt-auto">
                     <button
                       onClick={handleAnalyze}
