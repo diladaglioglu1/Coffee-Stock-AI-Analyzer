@@ -94,7 +94,7 @@ npm run dev
 The dashboard will be available at http://localhost:5173.
 
 Note: The backend must be running for the dashboard to fetch product and sales data.
-
+⚠️ AI service is not configured. Please add GEMINI_API_KEY to your .env file.
 ## Business Logic & AI
 The system addresses the "Overstock vs. Understock" dilemma common in small businesses. By sending recent sales velocity and current stock levels to the Gemini AI, the application provides specific recommendations such as:
 
