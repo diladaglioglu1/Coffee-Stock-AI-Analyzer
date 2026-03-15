@@ -1,26 +1,11 @@
-# ai_db_bridge.py
-# BrewIntelligence — AI ↔ Database Integration Bridge
-# Rol: AI Specialist (Kişi 2) — Kişi 1 (DB) ile entegrasyon katmanı
-# SWE314 W2: Relational Database + W3: Service Layer
-#
-# ⚠️  Kişi 1'in models.py'si hazır olduğunda sadece import satırını güncelle.
-#     Köprünün geri kalanı değişmez.
-
 from __future__ import annotations
 
 from datetime import date, timedelta
 from sqlmodel import Session, select, func
 
-# ── Kişi 1'in modelleri gelince bu bloğu güncelle ─────────────────────────────
-# Şu an: Kişi 1 henüz bitirmedi → stub modeller kullanıyoruz (test için).
-# Sonra: Aşağıdaki try/except bloğunu sil, sadece gerçek importu bırak:
-#
-#   from models import Product, Sale, Waste
-#
 try:
-    from models import Product, Sale, Waste          # Kişi 1 hazır olunca
+    from models import Product, Sale, Waste         
 except ImportError:
-    # ── STUB MODELLER — sadece test/geliştirme için ───────────────────────────
     from sqlmodel import SQLModel, Field
     from typing import Optional
 
@@ -43,15 +28,8 @@ except ImportError:
         quantity:   float
         date:       date
         reason:     str
-# ─────────────────────────────────────────────────────────────────────────────
 
-
-# ── Ortalama Günlük Satış Hesapla ─────────────────────────────────────────────
 def get_avg_daily_sales(product_id: int, db: Session, days: int = 7) -> float:
-    """
-    Son `days` güne ait ortalama günlük satış miktarını döner.
-    Kişi 1'in Sale tablosunu kullanır.
-    """
     cutoff = date.today() - timedelta(days=days)
 
     result = db.exec(
@@ -62,15 +40,7 @@ def get_avg_daily_sales(product_id: int, db: Session, days: int = 7) -> float:
 
     return float(result) if result else 0.0
 
-
-# ── Ürün + AI Verisi Birleşik Getir ───────────────────────────────────────────
 def get_product_with_ai_inputs(product_id: int, db: Session) -> dict | None:
-    """
-    AI analizi için gereken tüm veriyi hazırlar.
-
-    Returns:
-        {"id", "name", "current_stock", "avg_sales", "unit"} veya None
-    """
     product = db.get(Product, product_id)
     if not product:
         return None
@@ -85,12 +55,7 @@ def get_product_with_ai_inputs(product_id: int, db: Session) -> dict | None:
         "unit":          getattr(product, "unit", "birim"),
     }
 
-
-# ── Tüm Ürünler için Toplu Veri ───────────────────────────────────────────────
 def get_all_products_with_ai_inputs(db: Session) -> list[dict]:
-    """
-    Dashboard'daki tüm ürünleri AI analizine hazır formatta döner.
-    """
     products = db.exec(select(Product)).all()
 
     return [
@@ -104,8 +69,5 @@ def get_all_products_with_ai_inputs(db: Session) -> list[dict]:
         for p in products
     ]
 
-
-# ── AI Sonucunu DB'ye Kaydet (opsiyonel) ──────────────────────────────────────
 def log_ai_advice(product_id: int, advice: str, db: Session) -> None:
-    """Opsiyonel: Kişi 1 AIAdviceLog modeli eklerse burayı aktif et."""
     pass
