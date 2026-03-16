@@ -1,20 +1,9 @@
-"""
-seed_sales.py
-
-This script generates simulated historical sales data for the coffee shop
-inventory system. It creates approximately 30 days of sales records for
-each product stored in the database.
-
-The goal of this dataset is to simulate realistic demand patterns that
-can later be analyzed by the backend and the Gemini AI module to generate
-inventory recommendations.
-"""
 import random
 from datetime import date, timedelta
 
-from sqlmodel import select
+from sqlmodel import Session, select
 
-from database import get_session
+from database import engine
 from models import Product, Sale
 
 
@@ -47,7 +36,7 @@ def generate_sale_quantity(product_name: str, current_date: date) -> float:
 
 
 def seed_sales():
-    with get_session() as session:
+    with Session(engine) as session:
         existing_sales = session.exec(select(Sale)).first()
         if existing_sales:
             print("Sales data already exists. Skipping sales seed.")
@@ -67,11 +56,14 @@ def seed_sales():
         for single_date in (start_date + timedelta(days=i) for i in range(30)):
             for product in products:
                 quantity = generate_sale_quantity(product.name, single_date)
+                unit_price = round(product.unit_cost * random.uniform(1.8, 2.4), 2)
+
                 sales_to_add.append(
                     Sale(
                         product_id=product.id,
                         quantity=quantity,
-                        date=single_date
+                        date=single_date,
+                        unit_price=unit_price,
                     )
                 )
 
