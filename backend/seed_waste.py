@@ -1,9 +1,9 @@
 import random
 from datetime import date, timedelta
 
-from sqlmodel import select
+from sqlmodel import Session, select
 
-from database import get_session
+from database import engine
 from models import Product, Waste
 
 
@@ -21,7 +21,7 @@ def generate_waste_quantity(product_name: str) -> float:
 
 
 def seed_waste():
-    with get_session() as session:
+    with Session(engine) as session:
         existing_waste = session.exec(select(Waste)).first()
         if existing_waste:
             print("Waste data already exists. Skipping waste seed.")
