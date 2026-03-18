@@ -1,22 +1,21 @@
 # ai_service.py
 # BrewIntelligence — AI Integration Layer
 # Rol: AI Specialist (Kişi 2) | SWE314 W3: External APIs & Service Layer
-# Model: Groq (Llama 3.3) — Gemini drop-in alternative
+# Model: Groq (Llama 3.3)
 
 import os
 from dotenv import load_dotenv
 from groq import Groq
 
-# ── W3: Security — Load API key from .env, never hardcode ─────────────────────
 load_dotenv()
 
-_API_KEY    = os.getenv("GEMINI_API_KEY")
+_API_KEY = os.getenv("GROQ_API_KEY")
 _MODEL_NAME = "llama-3.3-70b-versatile"
 
 _client = Groq(api_key=_API_KEY) if _API_KEY else None
+print("API KEY:", _API_KEY)
+print("CLIENT:", _client)
 
-
-# ── Prompt Engineering ─────────────────────────────────────────────────────────
 def _build_prompt(product_name: str, current_stock: float, avg_sales: float) -> str:
     days_remaining = round(current_stock / avg_sales, 1) if avg_sales > 0 else "∞"
 
@@ -49,26 +48,16 @@ Rules:
 - Do NOT start with labels like "Status:" or "Recommendation:" — just begin directly."""
 
 
-# ── Main Service Function ──────────────────────────────────────────────────────
 def get_ai_advice(product_name: str, current_stock: float, avg_sales: float) -> str:
-    """
-    Generates AI-powered stock advice for a coffee shop product.
-
-    Args:
-        product_name  : Product name        (e.g. "Ethiopia Beans")
-        current_stock : Current stock level (e.g. 10.0)
-        avg_sales     : Avg daily sales - last 7 days (e.g. 2.5)
-
-    Returns:
-        AI advice string. Returns user-friendly error message on failure.
-    """
     if not _client:
-        return "⚠️ AI service is not configured. Please add GEMINI_API_KEY to your .env file."
+        return "⚠️ AI service is not configured. Please add GROQ_API_KEY to your .env file."
 
     if current_stock < 0 or avg_sales < 0:
         return "⚠️ Invalid stock data. Please provide positive values."
 
     prompt = _build_prompt(product_name, current_stock, avg_sales)
+
+    print("AI CALL STARTED")
 
     try:
         response = _client.chat.completions.create(
@@ -93,7 +82,6 @@ def get_ai_advice(product_name: str, current_stock: float, avg_sales: float) -> 
         return "⚠️ AI service is currently unavailable. Please try again in a few minutes."
 
 
-# ── Bulk Analysis ──────────────────────────────────────────────────────────────
 def get_bulk_advice(products: list[dict]) -> list[dict]:
     results = []
     for p in products:
@@ -106,15 +94,14 @@ def get_bulk_advice(products: list[dict]) -> list[dict]:
     return results
 
 
-# ── Developer Test ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     test_cases = [
-        {"name": "Ethiopia Beans",   "stock": 12,  "avg_sales": 42.5},
-        {"name": "Brazil Santos",    "stock": 500, "avg_sales": 15.0},
-        {"name": "Decaf Colombia",   "stock": 80,  "avg_sales": 8.3},
+        {"name": "Ethiopia Beans", "stock": 12, "avg_sales": 42.5},
+        {"name": "Brazil Santos", "stock": 500, "avg_sales": 15.0},
+        {"name": "Decaf Colombia", "stock": 80, "avg_sales": 8.3},
     ]
     for tc in test_cases:
         print(f"\n{'─'*50}")
         print(f"☕  {tc['name']} | Stock: {tc['stock']} | Avg Sales: {tc['avg_sales']}/day")
         print(f"{'─'*50}")
-        print(get_ai_advice(tc["name"], tc["stock"], tc["avg_sales"]))
+        print(get_ai_advice(tc['name'], tc['stock'], tc['avg_sales']))
