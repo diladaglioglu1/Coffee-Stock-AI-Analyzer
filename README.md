@@ -1,11 +1,10 @@
 # SWE314 Web Programming Project 1 - Coffee Stock AI Analyzer
 
 ## Overview
-This repository contains the **Coffee Stock AI Analyzer** — an AI-powered full-stack dashboard developed to simulate inventory intelligence for a gourmet coffee shop. The application helps business owners monitor inventory, analyze historical sales, and receive smart stock recommendations through Google Gemini AI.
+This repository contains the Coffee Stock AI Analyzer — an AI-powered full-stack dashboard developed to simulate inventory intelligence for a gourmet coffee shop. The application helps business owners monitor inventory, analyze historical sales, and receive smart stock recommendations through AI.
 
 ## Repository Structure
 
-```
 Coffee-Stock-AI-Analyzer/
 │
 ├── backend/                 # FastAPI backend application
@@ -25,125 +24,112 @@ Coffee-Stock-AI-Analyzer/
 │   │                        # implementation decisions and results
 │
 └── README.md                # Main project documentation
-                            # Provides project overview, setup instructions,
-                            # architecture description and usage guide
-```
+
 ## Core Components
 
 ### Backend — FastAPI REST API (backend/)
 A robust data layer that manages inventory and integrates with Generative AI.
 
-**Features**
+Features
 
-**Inventory Management:**  CRUD operations for coffee shop products.
+Inventory Management: CRUD operations for coffee shop products.
 
-**Data Simulation:**  Specialized scripts to generate realistic sales and waste trends.
+Data Simulation: Scripts to generate realistic sales and waste trends.
 
-**AI Integration:** Integration with Google Gemini API to process inventory levels and sales velocity into natural language advice.
+AI Integration: Integration with Groq API (Llama 3.3) to generate inventory advice.
 
-**ORM Layer:**  SQLite database management using SQLModel.
+ORM Layer: SQLite database using SQLModel.
 
-**Automated Documentation:** Interactive Swagger UI for API testing.
+Swagger UI: Interactive API documentation.
 
 ### Frontend — React Dashboard (frontend/)
-A modern, responsive user interface built for real-time inventory monitoring.
+A modern UI for real-time inventory monitoring.
 
-**Concepts covered:**
+Concepts covered:
 
-**State Management:** Handling product lists and analysis results via useState.
+State Management: useState for product and analysis data.
 
-**Tailwind CSS:** Professional SaaS-style UI design and responsive layouts.
+Tailwind CSS: Responsive and modern UI.
 
-**Asynchronous Actions:** Fetching data and triggering AI analysis with loading states.
+Async Actions: Fetching backend data and triggering AI analysis.
 
-**Data Visualization:** Displaying stock levels and AI-generated insights clearly.
+Data Visualization: Showing stock levels and AI results.
 
-## Tech Stack 
+## Tech Stack
 
-| Layer| Technology| 
-|--------|----------|
-Frontend | React 18, Vite, Tailwind CSS |
-Backend | Python, FastAPI, SQLModel |
-Database | SQLite |
-AI Engine | Google Gemini API |
+Frontend: React 18, Vite, Tailwind CSS  
+Backend: Python, FastAPI, SQLModel  
+Database: SQLite  
+AI Engine: Groq API (Llama 3.3)
 
 ## Quick Start
 
-### 1. Start the Backend
-Navigate to the backend folder and set up the environment:
+### Backend
 
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-pip install -r requirements.txt
-python init_db.py
-python seed_sales.py
-python seed_waste.py
-uvicorn main:app --reload
-```
-The API will be available at http://localhost:8000. Visit http://localhost:8000/docs for the interactive UI.
+cd backend  
+python -m venv venv  
+venv\Scripts\activate  
+pip install -r requirements.txt  
+python init_db.py  
+python seed_sales.py  
+python seed_waste.py  
+uvicorn main:app --reload  
 
-### 2. Start a Frontend Version
-Open a new terminal and run:
-```bash
-cd frontend
-npm install
-npm run dev
-``` 
-The dashboard will be available at http://localhost:5173.
+Backend runs at: http://localhost:8000  
+Docs: http://localhost:8000/docs  
 
-Note: The backend must be running for the dashboard to fetch product and sales data.
-⚠️ AI service is not configured. Please add GEMINI_API_KEY to your .env file.
+### Frontend
+
+cd frontend  
+npm install  
+npm run dev  
+
+Frontend runs at: http://localhost:5173  
+
+## Environment Variables
+
+Create a .env file inside backend:
+
+GROQ_API_KEY=your_api_key_here  
+
 ## Business Logic & AI
-The system addresses the "Overstock vs. Understock" dilemma common in small businesses. By sending recent sales velocity and current stock levels to the Gemini AI, the application provides specific recommendations such as:
 
-"Demand for Oat Milk is rising; increase order by 20% for the weekend."
+The system solves the overstock vs understock problem.
 
-"Syrup stock is stagnant; avoid reordering to prevent waste."
+By analyzing stock and daily sales, it gives recommendations like:
+
+Increase order due to high demand.  
+Avoid restocking due to low sales.  
 
 ## Project Architecture
 
-The system follows a standard full-stack architecture.
-```bash
-React Dashboard (Frontend)
-│
-│ HTTP Requests
-▼
-FastAPI REST API (Backend)
-│
-│ SQLModel ORM
-▼
-SQLite Database
-│
-▼
-Gemini AI Service
-``` 
+Frontend (React)  
+↓  
+Backend (FastAPI)  
+↓  
+Database (SQLite)  
+↓  
+AI Service (Groq)
 
 ## API Endpoints
-| Endpoint | Method | Description |
-|--------|--------|-------------|
-| /api/products | GET | Returns all products |
-| /api/analyze/{id} | GET | Generates AI inventory recommendation |
+
+GET /api/products → list products  
+GET /api/ai/analyze/{id} → AI analysis  
 
 ## Team Responsibilities
 
-This project was developed by a five-member team.
-
-| Role | Responsibility |
-|-----|----------------|
-Database Engineer | Designed relational schema and mock data generation |
-AI Engineer | Implemented Gemini AI integration |
-Backend Developer | Built FastAPI endpoints and business logic |
-Frontend Developer | Implemented React dashboard |
-Integration Engineer | Connected frontend and backend layers |
+Database Engineer → Database design & simulation  
+AI Engineer → AI integration  
+Backend Developer → API & logic  
+Frontend Developer → UI  
+Integration Engineer → System connection  
 
 ## Course Context
 
-This project was developed as part of the **Web Programming** course and demonstrates concepts such as:
+This project demonstrates:
 
-- REST API design
-- relational database modeling
-- ORM with SQLModel
-- frontend–backend integration
-- generative AI integration
+REST API design  
+database modeling  
+ORM usage  
+frontend-backend integration  
+AI integration   generative AI integration
