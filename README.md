@@ -6,6 +6,7 @@ This repository contains the Coffee Stock AI Analyzer — an AI-powered full-sta
 ## Repository Structure
 
 Coffee-Stock-AI-Analyzer/
+
 │
 ├── backend/                 # FastAPI backend application
 │   │                        # Contains the REST API, database models,
