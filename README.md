@@ -1,12 +1,11 @@
 # SWE314 Web Programming Project 1 - Coffee Stock AI Analyzer
 
 ## Overview
-This repository contains the Coffee Stock AI Analyzer — an AI-powered full-stack dashboard developed to simulate inventory intelligence for a gourmet coffee shop. The application helps business owners monitor inventory, analyze historical sales, and receive smart stock recommendations through AI.
+This repository contains the **Coffee Stock AI Analyzer** — an AI-powered full-stack dashboard developed to simulate inventory intelligence for a gourmet coffee shop. The application helps business owners monitor inventory, analyze historical sales, and receive smart stock recommendations through AI.
 
 ## Repository Structure
-
+```
 Coffee-Stock-AI-Analyzer/
-
 │
 ├── backend/                 # FastAPI backend application
 │   │                        # Contains the REST API, database models,
@@ -25,48 +24,52 @@ Coffee-Stock-AI-Analyzer/
 │   │                        # implementation decisions and results
 │
 └── README.md                # Main project documentation
-
+```
 ## Core Components
 
 ### Backend — FastAPI REST API (backend/)
 A robust data layer that manages inventory and integrates with Generative AI.
 
-Features
+**Features**
 
-Inventory Management: CRUD operations for coffee shop products.
+**Inventory Management:**  CRUD operations for coffee shop products.
 
-Data Simulation: Scripts to generate realistic sales and waste trends.
+**Data Simulation:** Scripts to generate realistic sales and waste trends.
 
-AI Integration: Integration with Groq API (Llama 3.3) to generate inventory advice.
+**AI Integration:**  Integration with Groq API (Llama 3.3) to generate inventory advice.
 
-ORM Layer: SQLite database using SQLModel.
+**ORM Layer:**  SQLite database using SQLModel.
 
-Swagger UI: Interactive API documentation.
+**Swagger UI:** Interactive API documentation.
 
 ### Frontend — React Dashboard (frontend/)
-A modern UI for real-time inventory monitoring.
+A modern, responsive user interface built for real-time inventory monitoring.
 
-Concepts covered:
+**Concepts covered:**
 
-State Management: useState for product and analysis data.
+**State Management:** Handling product lists and analysis results via useState.
 
-Tailwind CSS: Responsive and modern UI.
+**Tailwind CSS:** Professional SaaS-style UI design and responsive layouts.
 
-Async Actions: Fetching backend data and triggering AI analysis.
+**Asynchronous Actions:** Fetching data and triggering AI analysis with loading states.
 
-Data Visualization: Showing stock levels and AI results.
+**Data Visualization:** Displaying stock levels and AI-generated insights clearly.
+
 
 ## Tech Stack
 
-Frontend: React 18, Vite, Tailwind CSS  
-Backend: Python, FastAPI, SQLModel  
-Database: SQLite  
-AI Engine: Groq API (Llama 3.3)
+
+| Layer| Technology| 
+|--------|----------|
+Frontend | React 18, Vite, Tailwind CSS |
+Backend | Python, FastAPI, SQLModel |
+Database | SQLite |
+AI Engine |  Groq API (Llama 3.3) |
 
 ## Quick Start
 
 ### Backend
-
+```bash
 cd backend  
 python -m venv venv  
 venv\Scripts\activate  
@@ -75,62 +78,69 @@ python init_db.py
 python seed_sales.py  
 python seed_waste.py  
 uvicorn main:app --reload  
-
-Backend runs at: http://localhost:8000  
-Docs: http://localhost:8000/docs  
+```
+The API will be available at http://localhost:8000. Visit http://localhost:8000/docs for the interactive UI.
 
 ### Frontend
-
+Open a new terminal and run:
+```bash
 cd frontend  
 npm install  
 npm run dev  
+```
+The dashboard will be available at http://localhost:5173.
 
-Frontend runs at: http://localhost:5173  
+Note: The backend must be running for the dashboard to fetch product and sales data.
 
 ## Environment Variables
 
 Create a .env file inside backend:
-
-GROQ_API_KEY=your_api_key_here  
-
+```bash
+DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost/coffee_stock_ai
+GROQ_API_KEY=your__api_key_here
+```
 ## Business Logic & AI
 
-The system solves the overstock vs understock problem.
+The system addresses the "Overstock vs. Understock" dilemma common in small businesses. By sending recent sales velocity and current stock levels to the Gemini AI, the application provides specific recommendations such as:
 
-By analyzing stock and daily sales, it gives recommendations like:
+"Demand for Oat Milk is rising; increase order by 20% for the weekend."
 
-Increase order due to high demand.  
-Avoid restocking due to low sales.  
+"Syrup stock is stagnant; avoid reordering to prevent waste." 
 
 ## Project Architecture
-
-Frontend (React)  
-↓  
-Backend (FastAPI)  
-↓  
-Database (SQLite)  
-↓  
-AI Service (Groq)
-
-## API Endpoints
-
-GET /api/products → list products  
-GET /api/ai/analyze/{id} → AI analysis  
+The system follows a standard full-stack architecture.
+```bash
+React Dashboard (Frontend)
+│
+│ HTTP Requests
+▼
+FastAPI REST API (Backend)
+│
+│ SQLModel ORM
+▼
+SQLite Database
+│
+▼
+AI Service 
+```
 
 ## Team Responsibilities
 
-Database Engineer → Database design & simulation  
-AI Engineer → AI integration  
-Backend Developer → API & logic  
-Frontend Developer → UI  
-Integration Engineer → System connection  
+This project was developed by a five-member team.
+
+| Role | Responsibility |
+|-----|----------------|
+Database Engineer | Designed relational schema and mock data generation |
+AI Engineer | Implemented Gemini AI integration |
+Backend Developer | Built FastAPI endpoints and business logic |
+Frontend Developer | Implemented React dashboard |
+Integration Engineer | Connected frontend and backend layers |
 
 ## Course Context
-
 This project demonstrates:
 
-REST API design  
-database modeling  
-ORM usage  
-frontend-backend integration  
-AI integration   generative AI integration
+- REST API design
+- relational database modeling
+- ORM with SQLModel
+- frontend–backend integration
+- generative AI integration
