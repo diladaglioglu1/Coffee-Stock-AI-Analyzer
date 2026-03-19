@@ -1,13 +1,11 @@
 from __future__ import annotations
 from datetime import date, timedelta
 from sqlmodel import Session, select, func
-from models import Product, Sale, Waste, Supplier  # Kendi modellerini kullanıyoruz
+from models import Product, Sale, Waste, Supplier 
 
 
 def get_avg_daily_sales(product_id: int, db: Session, days: int = 7) -> float:
-    """Son X günün günlük ortalama satış miktarını hesaplar."""
     cutoff = date.today() - timedelta(days=days)
-    # Toplam satışı gün sayısına bölerek daha sağlıklı bir ortalama alıyoruz
     total_sales = db.exec(
         select(func.sum(Sale.quantity))
         .where(Sale.product_id == product_id)
@@ -18,7 +16,6 @@ def get_avg_daily_sales(product_id: int, db: Session, days: int = 7) -> float:
 
 
 def get_avg_daily_waste(product_id: int, db: Session, days: int = 7) -> float:
-    """Son X günün günlük ortalama israf miktarını hesaplar (YENİ eklendi)."""
     cutoff = date.today() - timedelta(days=days)
     total_waste = db.exec(
         select(func.sum(Waste.quantity))
@@ -30,7 +27,6 @@ def get_avg_daily_waste(product_id: int, db: Session, days: int = 7) -> float:
 
 
 def get_product_with_ai_inputs(product_id: int, db: Session) -> dict | None:
-    """Tek bir ürün için AI'ya gidecek tüm verileri toplar."""
     product = db.get(Product, product_id)
     if not product:
         return None
@@ -52,7 +48,6 @@ def get_product_with_ai_inputs(product_id: int, db: Session) -> dict | None:
 
 
 def get_all_products_with_ai_inputs(db: Session) -> list[dict]:
-    """Aktif tüm ürünleri AI analizi için paketler."""
     products = db.exec(
         select(Product).where(Product.is_active == True)
     ).all()
@@ -61,5 +56,4 @@ def get_all_products_with_ai_inputs(db: Session) -> list[dict]:
 
 
 def log_ai_advice(product_id: int, advice: str, db: Session) -> None:
-    """İleride AI tavsiyelerini veritabanına kaydetmek istersen burayı kullanabilirsin."""
     pass
