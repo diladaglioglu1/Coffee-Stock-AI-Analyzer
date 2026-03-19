@@ -1,12 +1,3 @@
-# ai_router.py  (GÜNCELLENMİŞ — v2)
-# BrewIntelligence — FastAPI Router (AI Endpoints)
-# Rol: AI Specialist (Kişi 2) | SWE314 W3: Service Layer + Error Handling
-#
-# DEĞİŞİKLİKLER (v1 → v2):
-#   + ai_db_bridge entegrasyonu: ürün verisini DB'den otomatik çekiyor
-#   + ai_rate_limiter entegrasyonu: cache + kota koruması eklendi
-#   + /api/ai/status endpoint'i: rate limiter ve cache durumunu gösterir
-
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field
 from sqlmodel import Session
@@ -15,9 +6,8 @@ from ai_service      import get_ai_advice
 from ai_db_bridge    import get_product_with_ai_inputs, get_all_products_with_ai_inputs
 from ai_rate_limiter import get_advice_with_protection, ai_cache, ai_rate_limiter
 
-# Kişi 3'ün DB bağımlılık fonksiyonu — o yazana kadar stub
 try:
-    from database import get_session               # Kişi 3'ün dosyası
+    from database import get_session              
 except ImportError:
     from sqlmodel import create_engine, SQLModel
     _engine = create_engine("sqlite:///./brewintelligence_test.db")
@@ -29,10 +19,7 @@ except ImportError:
 
 router = APIRouter(prefix="/api/ai", tags=["AI Analysis"])
 
-
-# ── Şemalar ───────────────────────────────────────────────────────────────────
 class ManualAnalyzeRequest(BaseModel):
-    """Manuel veri girişi — DB yokken ya da override için."""
     product_name:  str   = Field(..., example="Ethiopia Yirgacheffe")
     current_stock: int   = Field(..., ge=0, example=120)
     avg_sales:     float = Field(..., ge=0, example=35.5)
@@ -48,24 +35,21 @@ class BulkAnalyzeResponse(BaseModel):
     results: list[AnalyzeResponse]
     total:   int
 
-
-# ── Endpoint 1: Ürün ID'siyle analiz (DB entegreli) ───────────────────────────
 @router.get(
     "/analyze/{product_id}",
     response_model=AnalyzeResponse,
-    summary="DB'deki ürünü ID ile analiz et",
-    description="Kişi 1'in DB'sinden ürün verisini çeker, Gemini ile analiz eder.",
+    summary="Analyze the product in DB with ID",
+    description="It pulls product data from Person 1's database and analyzes it with Gemini.",
 )
 async def analyze_by_id(
     product_id: int,
     db: Session = Depends(get_session),
 ):
-    # DB'den ürün + ortalama satış verisini al
     data = get_product_with_ai_inputs(product_id, db)
     if not data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Ürün bulunamadı: id={product_id}",
+            detail=f"The product was not found: id={product_id}",
         )
 
     result = get_advice_with_protection(
@@ -76,12 +60,10 @@ async def analyze_by_id(
     )
     return AnalyzeResponse(product_name=data["name"], **result)
 
-
-# ── Endpoint 2: Manuel analiz (DB gerektirmez) ────────────────────────────────
 @router.post(
     "/analyze",
     response_model=AnalyzeResponse,
-    summary="Manuel veri ile analiz et (test / override)",
+    summary="Analyze with manual data (test / override)",
 )
 async def analyze_manual(req: ManualAnalyzeRequest):
     result = get_advice_with_protection(
@@ -92,24 +74,22 @@ async def analyze_manual(req: ManualAnalyzeRequest):
     )
     return AnalyzeResponse(product_name=req.product_name, **result)
 
-
-# ── Endpoint 3: Tüm ürünler toplu analiz ─────────────────────────────────────
 @router.get(
     "/analyze/bulk/all",
     response_model=BulkAnalyzeResponse,
-    summary="Tüm ürünleri toplu analiz et",
+    summary="Analyze all products in bulk",
 )
 async def analyze_all(db: Session = Depends(get_session)):
     all_products = get_all_products_with_ai_inputs(db)
     if not all_products:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Veritabanında ürün bulunamadı.",
+            detail="The product was not found in the database.",
         )
     if len(all_products) > 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Toplu analizde en fazla 20 ürün destekleniyor.",
+            detail="In batch analysis, a maximum of 20 products are supported.",
         )
 
     results = []
@@ -124,18 +104,11 @@ async def analyze_all(db: Session = Depends(get_session)):
 
     return BulkAnalyzeResponse(results=results, total=len(results))
 
-
-# ── Endpoint 4: Servis durumu ─────────────────────────────────────────────────
 @router.get(
     "/status",
-    summary="Rate limiter ve cache durumunu göster",
+    summary="Show the rate limiter and cache status",
 )
 async def ai_status():
-    """
-    Hoca bu endpoint'i Swagger'da açıp görebilir:
-    - Kaç istek kaldı (dakika/gün)
-    - Cache kaç tavsiye tutuyor
-    """
     import os
     return {
         "service":      "BrewIntelligence AI",
@@ -145,13 +118,11 @@ async def ai_status():
         "cache":        ai_cache.stats,
     }
 
-
-# ── Endpoint 5: Cache temizle (stok güncellenince) ────────────────────────────
 @router.delete(
     "/cache/{product_name}",
-    summary="Ürün cache'ini temizle",
-    description="Stok güncellendiğinde eski AI tavsiyesini geçersiz kıl.",
+    summary="Clear the product cache",
+    description="Invalidate the old AI recommendation when the stock is updated.",
 )
 async def invalidate_cache(product_name: str):
     deleted = ai_cache.invalidate(product_name)
-    return {"message": f"'{product_name}' için {deleted} cache kaydı silindi."}
+    return {"message": f"{deleted} cache records deleted for '{product_name}'."}
