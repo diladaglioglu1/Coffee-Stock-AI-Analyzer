@@ -1,8 +1,9 @@
 from datetime import date
 import random
 
-from fastapi import APIRouter, HTTPException
-from sqlmodel import select
+from fastapi import APIRouter, HTTPException, Depends
+from sqlmodel import select, , Session
+from sqlalchemy import func
 
 from database import get_session
 from models import Product, Sale, Waste
@@ -68,90 +69,91 @@ def generate_waste_quantity(product_name: str) -> float:
 
 
 @router.post("/simulate-day")
-def simulate_one_day():
-    with get_session() as session:
-        products = session.exec(select(Product)).all()
+def simulate_one_day(session: Session = Depends(get_session)):
+    products = session.exec(select(Product)).all()
 
-        if not products:
-            raise HTTPException(status_code=404, detail="No products found.")
+    if not products:
+        raise HTTPException(status_code=404, detail="No products found.")
 
-        results = []
+    results = []
 
-        for product in products:
-            sold_qty = generate_today_sale_quantity(product.name)
-            waste_qty = generate_waste_quantity(product.name)
+    for product in products:
+        requested_sale_qty = generate_today_sale_quantity(product.name)
+        requested_waste_qty = generate_waste_quantity(product.name)
 
-            total_outgoing = sold_qty + waste_qty
-            actual_reduction = min(product.current_stock, total_outgoing)
+        initial_stock = product.current_stock
 
-            product.current_stock = max(0, product.current_stock - total_outgoing)
+        actual_sold_qty = min(initial_stock, requested_sale_qty)
+        remaining_after_sale = initial_stock - actual_sold_qty
+        actual_waste_qty = min(remaining_after_sale, requested_waste_qty)
 
+        product.current_stock = initial_stock - actual_sold_qty - actual_waste_qty
+
+        if actual_sold_qty > 0:
+            unit_price = round(product.unit_cost * random.uniform(1.8, 2.4), 2)
             sale = Sale(
                 product_id=product.id,
-                quantity=sold_qty,
+                quantity=actual_sold_qty,
                 date=date.today(),
+                unit_price=unit_price,
             )
             session.add(sale)
 
-            if waste_qty > 0:
-                waste = Waste(
-                    product_id=product.id,
-                    quantity=waste_qty,
-                    date=date.today(),
-                    reason="Daily spoilage / operational waste",
-                )
-                session.add(waste)
-
-            if ai_cache:
-                ai_cache.invalidate(product.name)
-
-            results.append({
-                "product_id": product.id,
-                "product_name": product.name,
-                "sold": sold_qty,
-                "waste": waste_qty,
-                "new_stock": product.current_stock,
-                "actual_reduction": actual_reduction,
-            })
-
-        session.commit()
-
-        return {
-            "message": "One day simulation completed successfully.",
-            "results": results,
-        }
-
-
-@router.post("/restock/{product_id}")
-def restock_product(product_id: int, quantity: float):
-    if quantity <= 0:
-        raise HTTPException(status_code=400, detail="Quantity must be greater than 0.")
-
-    with get_session() as session:
-        product = session.get(Product, product_id)
-
-        if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
-
-        product.current_stock += quantity
+        if actual_waste_qty > 0:
+            waste = Waste(
+                product_id=product.id,
+                quantity=actual_waste_qty,
+                date=date.today(),
+                reason="Daily spoilage / operational waste",
+            )
+            session.add(waste)
 
         if ai_cache:
             ai_cache.invalidate(product.name)
 
-        session.commit()
-        session.refresh(product)
-
-        return {
-            "message": f"{product.name} restocked successfully.",
+        results.append({
             "product_id": product.id,
             "product_name": product.name,
+            "sold": actual_sold_qty,
+            "waste": actual_waste_qty,
             "new_stock": product.current_stock,
-        }
+            "actual_reduction": actual_sold_qty + actual_waste_qty,
+        })
 
+    session.commit()
+
+    return {
+        "message": "One day simulation completed successfully.",
+        "results": results,
+    }
+
+@router.post("/restock/{product_id}")
+def restock_product(product_id: int, quantity: float, session: Session = Depends(get_session)):
+    if quantity <= 0:
+        raise HTTPException(status_code=400, detail="Quantity must be greater than 0.")
+
+    product = session.get(Product, product_id)
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found.")
+
+    product.current_stock += quantity
+
+    if ai_cache:
+        ai_cache.invalidate(product.name)
+
+    session.commit()
+    session.refresh(product)
+
+    return {
+        "message": f"{product.name} restocked successfully.",
+        "product_id": product.id,
+        "product_name": product.name,
+        "new_stock": product.current_stock,
+    }
 
 @router.post("/reset-stocks")
-def reset_stocks():
-
+def reset_stocks(session: Session = Depends(get_session)):
     initial_stocks = {
         "Espresso Beans": 120,
         "House Blend Beans": 100,
@@ -175,53 +177,39 @@ def reset_stocks():
         "Ice Cubes": 100
     }
 
-    with get_session() as session:
+    products = session.exec(select(Product)).all()
 
-        products = session.exec(select(Product)).all()
+    for product in products:
+        if product.name in initial_stocks:
+            product.current_stock = initial_stocks[product.name]
+            session.add(product)
 
-        for product in products:
-
-            if product.name in initial_stocks:
-                product.current_stock = initial_stocks[product.name]
-                session.add(product)
-
-        session.commit()
+    session.commit()
 
     return {"message": "Stocks reset successfully"}
 
 @router.get("/products")
-def get_products():
-    with get_session() as session:
-        products = session.exec(select(Product)).all()
-        return products
-
-
-from sqlmodel import func  # Bu importu dosyanın en üstüne eklemeyi unutma!
-
+def get_products(session: Session = Depends(get_session)):
+    products = session.exec(select(Product)).all()
+    return products
 
 @router.get("/dashboard-summary")
-def get_dashboard_summary():
-    with next(get_session()) as session:
-        # 1. Toplam Satış Miktarı (Tüm zamanlar veya son simülasyonlar)
-        total_sales_qty = session.exec(select(func.sum(Sale.quantity))).one() or 0
+def get_dashboard_summary(session: Session = Depends(get_session)):
+    total_sales_qty = session.exec(select(func.sum(Sale.quantity))).one() or 0
+    total_waste_qty = session.exec(select(func.sum(Waste.quantity))).one() or 0
 
-        # 2. Toplam Atık Miktarı
-        total_waste_qty = session.exec(select(func.sum(Waste.quantity))).one() or 0
+    critical_products = session.exec(
+        select(Product).where(Product.current_stock <= Product.reorder_level)
+    ).all()
+    critical_count = len(critical_products)
 
-        # 3. Kritik Stoktaki Ürün Sayısı (current_stock < reorder_level)
-        critical_products = session.exec(
-            select(Product).where(Product.current_stock <= Product.reorder_level)
-        ).all()
-        critical_count = len(critical_products)
+    total_products = len(session.exec(select(Product)).all())
 
-        # 4. Toplam Aktif Ürün Sayısı
-        total_products = len(session.exec(select(Product)).all())
-
-        return {
-            "total_sales": round(total_sales_qty, 2),
-            "total_waste": round(total_waste_qty, 2),
-            "critical_stock_count": critical_count,
-            "total_products": total_products,
-            "waste_ratio": round((total_waste_qty / total_sales_qty * 100), 2) if total_sales_qty > 0 else 0,
-            "critical_items": [p.name for p in critical_products]  # UI'da uyarı göstermek için
-        }
+    return {
+        "total_sales": round(float(total_sales_qty), 2),
+        "total_waste": round(float(total_waste_qty), 2),
+        "critical_stock_count": critical_count,
+        "total_products": total_products,
+        "waste_ratio": round((float(total_waste_qty) / float(total_sales_qty) * 100), 2) if total_sales_qty and total_sales_qty > 0 else 0,
+        "critical_items": [p.name for p in critical_products]
+    }
