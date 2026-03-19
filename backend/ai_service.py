@@ -1,8 +1,3 @@
-# ai_service.py
-# BrewIntelligence — AI Integration Layer
-# Rol: AI Specialist (Kişi 2) | SWE314 W3: External APIs & Service Layer
-# Model: Groq (Llama 3.3)
-
 import os
 from dotenv import load_dotenv
 from groq import Groq
