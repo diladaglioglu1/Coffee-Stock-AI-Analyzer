@@ -195,3 +195,33 @@ def get_products():
         products = session.exec(select(Product)).all()
         return products
 
+
+from sqlmodel import func  # Bu importu dosyanın en üstüne eklemeyi unutma!
+
+
+@router.get("/dashboard-summary")
+def get_dashboard_summary():
+    with next(get_session()) as session:
+        # 1. Toplam Satış Miktarı (Tüm zamanlar veya son simülasyonlar)
+        total_sales_qty = session.exec(select(func.sum(Sale.quantity))).one() or 0
+
+        # 2. Toplam Atık Miktarı
+        total_waste_qty = session.exec(select(func.sum(Waste.quantity))).one() or 0
+
+        # 3. Kritik Stoktaki Ürün Sayısı (current_stock < reorder_level)
+        critical_products = session.exec(
+            select(Product).where(Product.current_stock <= Product.reorder_level)
+        ).all()
+        critical_count = len(critical_products)
+
+        # 4. Toplam Aktif Ürün Sayısı
+        total_products = len(session.exec(select(Product)).all())
+
+        return {
+            "total_sales": round(total_sales_qty, 2),
+            "total_waste": round(total_waste_qty, 2),
+            "critical_stock_count": critical_count,
+            "total_products": total_products,
+            "waste_ratio": round((total_waste_qty / total_sales_qty * 100), 2) if total_sales_qty > 0 else 0,
+            "critical_items": [p.name for p in critical_products]  # UI'da uyarı göstermek için
+        }

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import create_db_and_tables
 from ai_router import router as ai_router
 from stock_router import router as stock_router
+from log_router import router as log_router
 
 app = FastAPI(title="BrewIntelligence - API")
 
@@ -20,6 +21,7 @@ def on_startup():
 
 app.include_router(ai_router)
 app.include_router(stock_router)
+app.include_router(log_router)
 
 @app.get("/")
 def root():
