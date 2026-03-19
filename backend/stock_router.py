@@ -2,7 +2,7 @@ from datetime import date
 import random
 
 from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import select, , Session
+from sqlmodel import select, Session
 from sqlalchemy import func
 
 from database import get_session
