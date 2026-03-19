@@ -1,35 +1,33 @@
-# SWE314 Web Programming Project Report 
+# SWE314 Web Programming Project Report  
 ## Coffee Stock AI Analyzer
+
+---
 
 ## 1. Introduction
 
-Inventory management is a critical challenge for small businesses such as coffee shops. Maintaining the right balance between overstocking and understocking is difficult, especially when demand patterns fluctuate. Overstocking may lead to financial loss and product waste, while understocking may result in missed sales opportunities and reduced customer satisfaction.
+Inventory management is a critical challenge for small businesses such as coffee shops. Maintaining an optimal balance between overstocking and understocking becomes increasingly complex when demand patterns are dynamic and uncertain. Overstocking leads to financial loss and waste, while understocking results in missed sales and reduced customer satisfaction.
 
-This project presents Coffee Stock AI Analyzer, a full-stack web application designed to simulate intelligent inventory monitoring for a gourmet coffee shop. The system combines a relational database, a REST API backend, an interactive frontend dashboard, and an AI analysis module powered by Google Gemini.
+This project presents **Coffee Stock AI Analyzer**, a full-stack web application designed to simulate intelligent inventory monitoring for a gourmet coffee shop. The system integrates a relational database, a RESTful backend, a modern frontend dashboard, and an AI analysis module powered by the **Groq API**.
 
-The application analyzes historical sales data and current inventory levels to generate natural language recommendations about stock management. By integrating AI with traditional inventory data analysis, the system demonstrates how modern software architectures can support smarter business decisions.
+The application analyzes historical sales, waste, and procurement data to generate natural language recommendations for stock management.
+
+---
 
 ## 2. Project Objectives
 
 The primary objectives of this project are:
 
-- To design and implement a full-stack web application
+- Design and implement a full-stack web application  
+- Develop a relational database with real-world entities  
+- Build a RESTful API using **FastAPI**  
+- Create a responsive UI using **React + Vite**  
+- Integrate AI-based decision support using **Groq API**  
+- Simulate realistic business workflows  
 
-- To demonstrate database persistence and relational modeling
-
-- To build a RESTful backend using FastAPI
-
-- To create a responsive dashboard interface using React
-
-- To integrate Generative AI for decision support
-
-- To simulate realistic business scenarios using generated datasets
-
-Through this project, we aimed to combine multiple technologies covered in the course into a single cohesive system.
+---
 
 ## 3. System Architecture
 
-The system follows a standard three-layer architecture consisting of a frontend layer, a backend layer, and a data layer, with an additional AI service layer.
 ```bash
 React Dashboard (Frontend)
         │
@@ -39,11 +37,12 @@ FastAPI REST API (Backend)
         │
         │ SQLModel ORM
         ▼
-SQLite Database
+MySQL Database
         │
         ▼
-Gemini AI API
+Groq AI API
 ```
+
 **Frontend Layer**
 
 The frontend is implemented using **React and Vite**, providing a modern dashboard interface where users can view product inventory and request AI analysis.
@@ -54,93 +53,49 @@ The backend is implemented using **FastAPI**, which exposes REST API endpoints t
 
 **Data Layer**
 
-The database is implemented using **SQLite** and managed through **SQLModel**, which provides an ORM abstraction over the relational schema.
+The system uses **MySQL** as a production-ready relational database, managed through **SQLModel ORM.** This layer ensures structured data storage and efficient querying.
 
 **AI Layer**
 
-The application integrates the **Google Gemini API**, which processes structured inventory data and generates human-readable stock recommendations.
+The application integrates the **Groq API**,which processes structured inventory data and produces natural language recommendations for stock optimization.
 
 ## 4. Database Design
 
-The system uses a relational database composed of three main tables.
+The database layer is designed to support real-world inventory and procurement workflows. It is implemented using **SQLModel** and **MySQL**, ensuring scalability and relational integrity.
 
-**Product**
+**Core Entities**
 
-The Product table stores inventory items available in the coffee shop.
+- **Product** Stores inventory items with stock levels and units.
 
-Fields include:
+- **Sale** Tracks historical sales transactions for demand analysis.
 
-- id – unique identifier
+- **Waste** Records discarded or expired inventory to simulate real-world inefficiencies.
 
-- name – product name
+**Extended Entities**
 
-- current_stock – available inventory level
+- **Supplier** Stores supplier information and contact details.
 
-- unit – measurement unit (kg, liter, piece)
+- **PurchaseOrder** Represents procurement orders placed to suppliers.
 
-**Sale**
+- **PurchaseOrderItem** Tracks individual products within each purchase order.
 
-The Sale table stores historical sales records.
+**Relationships**
 
-Fields include:
+Product (1) → (N) Sale  
+Product (1) → (N) Waste  
+Supplier (1) → (N) PurchaseOrder  
+PurchaseOrder (1) → (N) PurchaseOrderItem  
+Product (1) → (N) PurchaseOrderItem
 
-- id – primary key
+This design enables:
 
-- product_id – foreign key referencing Product
+- demand analysis (via Sales)
 
-- quantity – quantity sold
+- loss tracking (via Waste)
 
-- date – date of transaction
+- supply chain simulation (via Suppliers & Orders)
 
-Relationship:
-
-```bash
-Product (1) → (N) Sale
-```
-
-This table allows the system to calculate average sales trends.
-
-**Waste**
-
-The Waste table stores records of discarded or expired inventory.
-
-Fields include:
-
-- id – primary key
-
-- product_id – foreign key referencing Product
-
-- quantity – discarded amount
-
-- date – date of waste
-
-- reason – reason for waste
-
-Relationship:
-
-```bash
-Product (1) → (N) Waste
-```
-
-Tracking waste helps simulate real-world inventory inefficiencies.
-
-## 5. Data Simulation
-
-Since real coffee shop data was not available, the project includes scripts that generate realistic mock datasets.
-
-**init_db.py**
-
-Creates the database tables and inserts the initial set of inventory items.
-
-**seed_sales.py**
-
-Generates approximately 30 days of historical sales data, allowing the backend to compute demand trends.
-
-**seed_waste.py**
-
-Generates records representing product waste due to expiration or operational errors.
-
-These scripts simulate realistic operational conditions for inventory analysis.
+The schema follows normalization principles to reduce redundancy and ensure data consistency.
 
 ## 6. Backend Implementation
 
@@ -180,25 +135,27 @@ Key frontend concepts used include:
 
 ## 8. AI Integration
 
-One of the most innovative components of the project is the integration of Google Gemini AI.
+The system integrates the Groq API for AI-driven analysis.
 
-When a user requests analysis for a product, the system sends structured data to the AI model, including:
+When analysis is requested, the system sends:
 
-- product name
+- product information
 
-- current stock level
+- current stock levels
 
-- average recent sales
+- historical sales trends
 
-The AI then generates a recommendation such as:
+- waste data
 
-- increasing stock before peak demand
+The AI generates insights such as:
 
-- avoiding unnecessary restocking
+- restocking recommendations
 
-- identifying potential inventory risks
+- demand predictions
 
-This demonstrates how Generative AI can assist decision-making in business systems.
+- risk warnings
+
+This demonstrates the use of generative AI in operational decision support systems.
 
 ## 9. Team Contributions
 
@@ -220,8 +177,8 @@ Detailed descriptions of individual contributions are provided in the responsibi
 
 ## 10. Conclusion
 
-The Coffee Stock AI Analyzer demonstrates how modern web technologies and AI services can be combined to create intelligent business support tools.
+The Coffee Stock AI Analyzer demonstrates how modern web technologies and AI services can be combined into an intelligent business support system.
 
-By integrating database design, backend APIs, frontend dashboards, and generative AI, the system simulates a realistic inventory management scenario.
+By integrating a scalable database, a high-performance backend, a responsive frontend, and AI-powered analysis, the system simulates realistic inventory and supply chain management.
 
-This project highlights the potential of AI-assisted decision-making in small business environments and illustrates the practical application of full-stack development concepts covered in the Web Programming course.
+This project highlights the importance of combining data engineering, software architecture, and AI to build effective decision-support tools for modern businesses.
