@@ -6,12 +6,10 @@ from collections import deque
 from threading import Lock
 from typing import Optional
 
-
 RATE_LIMIT_RPM   = 14       
 RATE_LIMIT_RPD   = 1400      
 CACHE_TTL_SECONDS = 300      
 CACHE_MAX_SIZE    = 100      
-
 
 class _AICache:
 
@@ -133,9 +131,9 @@ def get_advice_with_protection(
     allowed, reason = ai_rate_limiter.check()
     if not allowed:
         if reason == "rate_limit_minute":
-            msg = "⚠️ AI servisi yoğun, 1 dakika sonra tekrar deneyin."
+            msg = "⚠️ The AI service is busy, try again in 1 minute."
         else:
-            msg = "⚠️ Günlük AI analiz limitine ulaşıldı. Yarın tekrar deneyin."
+            msg = "⚠️ The daily AI analysis limit has been reached.  Try again tomorrow."
         return {
             "advice":       msg,
             "source":       "rate_limited",
@@ -146,7 +144,6 @@ def get_advice_with_protection(
     ai_rate_limiter.record()
     advice = _gemini_fn(product_name, current_stock, avg_sales)
 
-    # 4. Başarılıysa cache'e yaz (hata mesajlarını cache'leme)
     if not advice.startswith("⚠️"):
         ai_cache.set(product_name, current_stock, avg_sales, advice)
 
@@ -168,14 +165,14 @@ if __name__ == "__main__":
     def fake_gemini(name, stock, avg):
         global call_count
         call_count += 1
-        return f"Test tavsiyesi #{call_count} — {name}"
+        return f"Test advice #{call_count} — {name}"
 
     print("\n=== Cache Test ===")
-    r1 = get_advice_with_protection("Test Kahve", 100, 20.0, fake_gemini)
-    r2 = get_advice_with_protection("Test Kahve", 100, 20.0, fake_gemini)  # cache hit
-    r3 = get_advice_with_protection("Test Kahve", 50, 20.0, fake_gemini)   # farklı stok
+    r1 = get_advice_with_protection("Test Kahve", 100, 20.0, fake_ai)
+    r2 = get_advice_with_protection("Test Kahve", 100, 20.0, fake_ai)  
+    r3 = get_advice_with_protection("Test Kahve", 50, 20.0, fake_ai)   
 
     print(f"1. çağrı → source: {r1['source']}, advice: {r1['advice']}")
-    print(f"2. çağrı → source: {r2['source']}, advice: {r2['advice']}")  # cache!
+    print(f"2. çağrı → source: {r2['source']}, advice: {r2['advice']}")  
     print(f"3. çağrı → source: {r3['source']}, advice: {r3['advice']}")
-    print(f"\nGemini toplam çağrıldı: {call_count} kez (2 olmalı, 3 değil)")
+    print(f"\nTotal AI calls: {call_count} (Expected 2, not 3)")
