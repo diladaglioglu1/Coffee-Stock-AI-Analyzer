@@ -8,8 +8,7 @@ _API_KEY = os.getenv("GROQ_API_KEY")
 _MODEL_NAME = "llama-3.3-70b-versatile"
 
 _client = Groq(api_key=_API_KEY) if _API_KEY else None
-print("API KEY:", _API_KEY)
-print("CLIENT:", _client)
+
 
 def _build_prompt(product_name: str, current_stock: float, avg_sales: float) -> str:
     days_remaining = round(current_stock / avg_sales, 1) if avg_sales > 0 else "∞"
@@ -25,22 +24,28 @@ def _build_prompt(product_name: str, current_stock: float, avg_sales: float) -> 
     else:
         urgency = "NORMAL"
 
-    return f"""You are an experienced coffee shop operations consultant working inside the BrewIntelligence system.
+    return f"""You are an experienced inventory analyst for a coffee shop.
 
-Analyze the following inventory data and provide a direct, practical recommendation to the shop manager.
+Analyze the following product and provide a practical but analytical recommendation.
 
-PRODUCT        : {product_name}
-CURRENT STOCK  : {current_stock} units
-AVG DAILY SALES: {avg_sales:.1f} units/day
-DAYS REMAINING : {days_remaining} days
-STATUS         : {urgency}
+Product: {product_name}
+Current stock: {current_stock} units
+Average daily sales: {avg_sales:.1f} units/day
+Estimated days remaining: {days_remaining}
+Urgency level: {urgency}
 
-Rules:
-- Keep your response to maximum 4 sentences.
-- Briefly mention the math (how many days stock will last).
-- Give a clear action: place order / wait / run promotion / urgent reorder.
-- Write in plain English, as if speaking directly to the shop owner.
-- Do NOT start with labels like "Status:" or "Recommendation:" — just begin directly."""
+Your answer must:
+- explain what the stock level means in operational terms
+- mention how long the stock is expected to last
+- state whether the business should reorder, wait, monitor, or run a promotion
+- explain the business risk briefly
+- be 5 to 7 sentences long
+- sound professional and useful for a shop manager
+
+Do not use bullet points.
+Do not write only one-line advice.
+Write in clear English.
+"""
 
 
 def get_ai_advice(product_name: str, current_stock: float, avg_sales: float) -> str:
@@ -52,23 +57,25 @@ def get_ai_advice(product_name: str, current_stock: float, avg_sales: float) -> 
 
     prompt = _build_prompt(product_name, current_stock, avg_sales)
 
-    print("AI CALL STARTED")
-
     try:
         response = _client.chat.completions.create(
             model=_MODEL_NAME,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a coffee shop operations consultant. Provide short, clear, and actionable inventory advice in English."
+                    "content": (
+                        "You are a professional inventory analyst for a coffee shop. "
+                        "Provide analytical, specific, and operationally useful stock recommendations. "
+                        "Avoid overly short answers."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": prompt
-                }
+                    "content": prompt,
+                },
             ],
-            temperature=0.7,
-            max_tokens=500,
+            temperature=0.5,
+            max_tokens=350,
         )
         return response.choices[0].message.content.strip()
 
@@ -82,8 +89,8 @@ def get_bulk_advice(products: list[dict]) -> list[dict]:
     for p in products:
         advice = get_ai_advice(
             product_name=p.get("name", "Unknown Product"),
-            current_stock=p.get("stock", 0),
-            avg_sales=p.get("avg_sales", 0.0),
+            current_stock=p.get("current_stock", 0),
+            avg_sales=p.get("avg_daily_sales", 0.0),
         )
         results.append({"name": p.get("name"), "advice": advice})
     return results
