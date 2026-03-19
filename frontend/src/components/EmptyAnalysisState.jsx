@@ -1,84 +1,31 @@
-import React, { useState } from "react";
-import { Sparkles, Search } from "lucide-react";
-import { demoProducts } from "../data/demoData";
+import React from "react";
+import { Sparkles, BarChart3, ShieldCheck } from "lucide-react";
 
-const EmptyAnalysisState = ({ onAnalyzeClick }) => {
-
-  const [searchValue, setSearchValue] = useState("");
-
-  const filteredProducts = demoProducts.filter((p) =>
-    p.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
-
+const EmptyAnalysisState = () => {
   return (
-    <div className="h-full flex flex-col justify-center items-center text-center relative z-10 px-10">
-
-      {/* AI TITLE */}
-      <h1 className="flex items-center gap-4 text-4xl md:text-4xl font-black text-white tracking-tight mb-6">
+    <div className="h-full flex flex-col justify-center items-center text-center px-10 animate-in fade-in zoom-in duration-500">
+      <div className="w-20 h-20 bg-[#D98E5E]/10 rounded-full flex items-center justify-center mb-8">
         <Sparkles size={40} className="text-[#D98E5E]" />
-        Inventory Intelligence
-      </h1>
-
-      {/* SUBTEXT */}
-      <p className="text-[#AFA19E] text-sm md:text-base max-w-xl leading-7 mb-10">
-        Get clear stock insights for your coffee products. 
-        Select a product from the list or type a product name below to start AI analysis.
-      </p>
-
-
-      {/* SEARCH INPUT */}
-      <div className="w-full max-w-md mb-6 relative">
-
-        <Search
-          size={18}
-          className="absolute left-4 top-4 text-[#847B78]"
-        />
-
-        <input
-          type="text"
-          placeholder="Type product name..."
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          className="w-full bg-[#2A1D1A] border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white text-sm focus:ring-1 focus:ring-[#D98E5E] outline-none"
-        />
-
       </div>
 
+      <h1 className="text-4xl font-black text-white tracking-tight mb-6 uppercase">
+        AI Stock Intelligence
+      </h1>
 
-      {/* SEARCH RESULTS */}
-      {searchValue && (
-        <div className="w-full max-w-md mb-6 bg-[#2A1D1A] rounded-2xl border border-white/10 overflow-hidden">
+      <p className="text-[#AFA19E] text-sm max-w-md leading-7 mb-10">
+        Our AI engine analyzes product stock conditions and recent sales
+        behavior. Select a product from the list to generate an optimized stock
+        recommendation.
+      </p>
 
-          {filteredProducts.length === 0 && (
-            <p className="text-sm text-[#AFA19E] p-4">
-              No matching product found
-            </p>
-          )}
-
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => {
-                onAnalyzeClick(product.id);
-              }}
-              className="px-4 py-3 text-left text-sm text-white hover:bg-[#3a2722] cursor-pointer transition"
-            >
-              {product.name}
-            </div>
-          ))}
+      <div className="flex gap-6">
+        <div className="flex items-center gap-2 text-[10px] font-black text-[#847B78] uppercase tracking-widest">
+          <BarChart3 size={14} /> Real-time Data
         </div>
-      )}
-
-
-      {/* ANALYZE BUTTON */}
-      <button
-        onClick={onAnalyzeClick}
-        className="px-10 py-4 bg-[#D98E5E] hover:bg-[#C47D4D] text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all shadow-lg shadow-orange-950/30 flex items-center gap-2"
-      >
-        <Sparkles size={16} />
-        AI STOCK ANALYSIS
-      </button>
-
+        <div className="flex items-center gap-2 text-[10px] font-black text-[#847B78] uppercase tracking-widest">
+          <ShieldCheck size={14} /> Secure API Layer
+        </div>
+      </div>
     </div>
   );
 };
