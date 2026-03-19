@@ -20,8 +20,8 @@ def generate_today_sale_quantity(product_name: str) -> float:
     weekday = date.today().weekday()
     is_weekend = weekday >= 5
 
-    if product_name in ["Oat Milk", "Almond Milk", "Soy Milk"]:
-        return random.randint(45, 70) if is_weekend else random.randint(18, 30)
+    if product_name in ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"]:
+        return random.randint(8, 15) if is_weekend else random.randint(4, 8)
 
     if product_name in [
         "Espresso Beans",
@@ -30,7 +30,7 @@ def generate_today_sale_quantity(product_name: str) -> float:
         "Ethiopia Beans",
         "Decaf Beans",
     ]:
-        return random.randint(30, 50) if is_weekend else random.randint(15, 25)
+        return random.randint(5, 10) if is_weekend else random.randint(2, 5)
 
     if product_name in [
         "Caramel Syrup",
@@ -38,34 +38,34 @@ def generate_today_sale_quantity(product_name: str) -> float:
         "Hazelnut Syrup",
         "Chocolate Syrup",
     ]:
-        return random.randint(10, 20) if is_weekend else random.randint(5, 12)
+        return random.randint(2, 4) if is_weekend else random.randint(1, 3)
 
     if product_name in ["Paper Filters", "Coffee Cups", "Coffee Lids", "Sugar Packets"]:
-        return random.randint(40, 65) if is_weekend else random.randint(20, 35)
+        return random.randint(15, 30) if is_weekend else random.randint(8, 18)
 
     if product_name in ["Matcha Powder", "Cocoa Powder"]:
-        return random.randint(8, 18) if is_weekend else random.randint(4, 10)
+        return random.randint(2, 5) if is_weekend else random.randint(1, 3)
 
     if product_name == "Ice Cubes":
-        return random.randint(50, 80) if is_weekend else random.randint(20, 40)
+        return random.randint(10, 20) if is_weekend else random.randint(5, 12)
 
-    if product_name == "Whole Milk":
-        return random.randint(35, 55) if is_weekend else random.randint(20, 30)
-
-    return random.randint(10, 20) if is_weekend else random.randint(5, 10)
+    return random.randint(1, 4)
 
 
 def generate_waste_quantity(product_name: str) -> float:
     if product_name in ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"]:
-        return random.randint(0, 3)
+        return random.randint(0, 1)
 
     if product_name == "Ice Cubes":
-        return random.randint(0, 4)
+        return random.randint(0, 2)
 
     if "Syrup" in product_name:
         return random.randint(0, 1)
 
-    return random.randint(0, 2)
+    if product_name in ["Matcha Powder", "Cocoa Powder"]:
+        return random.randint(0, 1)
+
+    return random.randint(0, 1)
 
 
 @router.post("/simulate-day")
@@ -127,6 +127,7 @@ def simulate_one_day(session: Session = Depends(get_session)):
         "results": results,
     }
 
+
 @router.post("/restock/{product_id}")
 def restock_product(product_id: int, quantity: float, session: Session = Depends(get_session)):
     if quantity <= 0:
@@ -152,29 +153,30 @@ def restock_product(product_id: int, quantity: float, session: Session = Depends
         "new_stock": product.current_stock,
     }
 
+
 @router.post("/reset-stocks")
 def reset_stocks(session: Session = Depends(get_session)):
     initial_stocks = {
-        "Espresso Beans": 120,
-        "House Blend Beans": 100,
-        "Colombia Beans": 90,
-        "Ethiopia Beans": 80,
-        "Decaf Beans": 70,
-        "Whole Milk": 60,
-        "Oat Milk": 50,
-        "Almond Milk": 40,
-        "Soy Milk": 40,
-        "Caramel Syrup": 25,
-        "Vanilla Syrup": 25,
-        "Hazelnut Syrup": 20,
-        "Chocolate Syrup": 20,
-        "Matcha Powder": 15,
-        "Cocoa Powder": 20,
-        "Sugar Packets": 500,
-        "Paper Filters": 300,
-        "Coffee Cups": 400,
-        "Coffee Lids": 400,
-        "Ice Cubes": 100
+        "Espresso Beans": 30,
+        "House Blend Beans": 28,
+        "Colombia Beans": 24,
+        "Ethiopia Beans": 22,
+        "Decaf Beans": 18,
+        "Whole Milk": 35,
+        "Oat Milk": 25,
+        "Almond Milk": 22,
+        "Soy Milk": 20,
+        "Caramel Syrup": 15,
+        "Vanilla Syrup": 15,
+        "Hazelnut Syrup": 12,
+        "Chocolate Syrup": 12,
+        "Matcha Powder": 10,
+        "Cocoa Powder": 12,
+        "Sugar Packets": 450,
+        "Paper Filters": 250,
+        "Coffee Cups": 300,
+        "Coffee Lids": 300,
+        "Ice Cubes": 50
     }
 
     products = session.exec(select(Product)).all()
@@ -188,10 +190,12 @@ def reset_stocks(session: Session = Depends(get_session)):
 
     return {"message": "Stocks reset successfully"}
 
+
 @router.get("/products")
 def get_products(session: Session = Depends(get_session)):
     products = session.exec(select(Product)).all()
     return products
+
 
 @router.get("/dashboard-summary")
 def get_dashboard_summary(session: Session = Depends(get_session)):
