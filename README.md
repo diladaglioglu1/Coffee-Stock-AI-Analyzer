@@ -144,3 +144,39 @@ This project demonstrates:
 - ORM with SQLModel
 - frontend–backend integration
 - generative AI integration
+
+## Example Workflow
+
+### Dashboard Overview
+The system loads all products from the backend and displays real-time stock levels.
+
+![Dashboard Overview](./screenshots/dashboard.png)
+![Extended Dashboard](./screenshots/dashboard-more.png)
+---
+
+### Product Selection
+User selects a product from the inventory list to analyze.
+
+![Product Selection](./screenshots/product-selection.png)
+
+---
+
+### First AI Analysis (Cache Miss)
+The system sends a request to the AI service.
+
+- Source: GROQ AI
+- Cache: Miss  
+- Real-time analysis is generated
+
+![AI Analysis - Miss](./screenshots/ai-miss.png)
+
+---
+
+### Second AI Analysis (Cache Hit)
+The same request is triggered again.
+
+- Source: Cache
+- Cache: Hit  
+- Response is returned instantly without calling AI
+
+![AI Analysis - Hit](./screenshots/ai-hit.png)
