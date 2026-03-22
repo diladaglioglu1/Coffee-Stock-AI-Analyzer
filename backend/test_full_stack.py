@@ -1,9 +1,3 @@
-# test_full_stack.py
-# BrewIntelligence — Tam Entegrasyon Test Suite (Kişi 2)
-# Çalıştır: python test_full_stack.py
-#
-# Bu script diğer kişilerin kodunu BEKLEMEDEN tüm AI katmanını test eder.
-
 import sys, os, time
 
 GREEN  = "\033[92m"; RED = "\033[91m"; YELLOW = "\033[93m"
@@ -25,12 +19,11 @@ def section(title):
     print(f"{'━'*55}{RESET}")
 
 
-# ══════════════════════════════════════════════════════
 section("TEST 1 — Cache: TTL ve Hit/Miss")
-# ══════════════════════════════════════════════════════
+
 from ai_rate_limiter import _AICache
 
-cache = _AICache(ttl=2, max_size=5)  # 2 saniyelik TTL (test için kısa)
+cache = _AICache(ttl=2, max_size=5)  
 
 cache.set("Kahve A", 100, 20.0, "Tavsiye 1")
 hit = cache.get("Kahve A", 100, 20.0)
@@ -53,12 +46,11 @@ else:
     fail("TTL çalışmıyor, eski veri hâlâ dönüyor!")
 
 
-# ══════════════════════════════════════════════════════
 section("TEST 2 — Rate Limiter: Pencere Kontrolü")
-# ══════════════════════════════════════════════════════
+
 from ai_rate_limiter import _RateLimiter
 
-limiter = _RateLimiter(rpm=3, rpd=100)  # Düşük limit test için
+limiter = _RateLimiter(rpm=3, rpd=100)  
 
 for i in range(3):
     allowed, reason = limiter.check()
@@ -83,12 +75,12 @@ else:
     fail(f"İstatistik yanlış: {stats}")
 
 
-# ══════════════════════════════════════════════════════
+
 section("TEST 3 — get_advice_with_protection: Cache + Rate Limit")
-# ══════════════════════════════════════════════════════
+
 from ai_rate_limiter import get_advice_with_protection, _AICache, _RateLimiter
 
-# Temiz instance'larla test
+
 test_cache   = _AICache(ttl=60)
 test_limiter = _RateLimiter(rpm=10, rpd=100)
 
@@ -97,14 +89,14 @@ def mock_gemini(name, stock, avg):
     global call_count; call_count += 1
     return f"Mock tavsiye — {name}"
 
-# Monkey-patch modül seviyesi instance'ları geçici olarak değiştir
+
 import ai_rate_limiter as rl_module
 orig_cache, orig_limiter = rl_module.ai_cache, rl_module.ai_rate_limiter
 rl_module.ai_cache, rl_module.ai_rate_limiter = test_cache, test_limiter
 
 r1 = get_advice_with_protection("Espresso", 80, 15.0, mock_gemini)
-r2 = get_advice_with_protection("Espresso", 80, 15.0, mock_gemini)  # cache hit
-r3 = get_advice_with_protection("Espresso", 40, 15.0, mock_gemini)  # farklı stok
+r2 = get_advice_with_protection("Espresso", 80, 15.0, mock_gemini) 
+r3 = get_advice_with_protection("Espresso", 40, 15.0, mock_gemini)  
 
 if r1["source"] == "gemini" and not r1["cache_hit"]:
     ok("1. istek Gemini'ye gitti.")
@@ -130,9 +122,9 @@ else:
 rl_module.ai_cache, rl_module.ai_rate_limiter = orig_cache, orig_limiter
 
 
-# ══════════════════════════════════════════════════════
+
 section("TEST 4 — DB Bridge: Stub Modeller")
-# ══════════════════════════════════════════════════════
+
 from sqlmodel import create_engine, SQLModel, Session
 from datetime import date, timedelta
 
@@ -143,13 +135,13 @@ try:
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as db:
-        # Veri ekle
+      
         p = Product(name="Test Kahve", current_stock=200, unit="g")
         db.add(p)
         db.commit()
         db.refresh(p)
 
-        # Son 7 gün satış ekle
+     
         for i in range(7):
             db.add(Sale(
                 product_id=p.id,
@@ -180,9 +172,9 @@ except Exception as e:
     fail(f"DB Bridge testi hata verdi: {e}")
 
 
-# ══════════════════════════════════════════════════════
+
 section("TEST 5 — Gerçek Gemini API (anahtar varsa)")
-# ══════════════════════════════════════════════════════
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -199,7 +191,7 @@ else:
     print(f"  {YELLOW}⚠{RESET}  API anahtarı yok, Gemini testi atlandı.")
 
 
-# ══════════════════════════════════════════════════════
+
 print(f"\n{BOLD}{'═'*55}")
 print(f"  SONUÇ: {GREEN}{passed} geçti{RESET}{BOLD}  |  {RED}{failed} başarısız{RESET}")
 print(f"{'═'*55}{RESET}\n")
